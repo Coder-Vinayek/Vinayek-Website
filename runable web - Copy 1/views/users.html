@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User Dashboard</title>
+  <!-- Your own styles (optional) -->
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+
+<body>
+  <div class="container my-4">
+    <h1 class="mb-4">Available Tournaments</h1>
+    <div id="tournaments-section"></div>
+
+    <h2 class="mt-5">Your Wallet</h2>
+    <div id="wallet-section"></div>
+  </div>
+
+  <!-- Toast container -->
+  <div class="toast-container position-fixed top-0 end-0 p-3" id="toasts"></div>
+
+  <!-- Component bundles (they must load BEFORE the inline script) -->
+  <script src="/js/components/tournament-components.js"></script>
+  <script src="/js/components/wallet-components.js"></script>
+  <script src="/js/shared.js"></script>
+
+  <!-- Bootstrap bundle (for the toast helper & Bootstrap JS widgets) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- App bootstrap: get userId, then render components -->
+  <script>
+    (async () => {
+      try {
+        const resp = await fetch('/api/session');
+        if (!resp.ok) {
+          location.assign('/login');
+          return;
+        }
+        const { id, role } = await resp.json();
+        if (!id) {
+          location.assign('/login');
+          return;
+        }
+
+        /* ---- Tournament component (global variable supplied by the script above) ---- */
+        tournamentComponents.setCurrentUser(userId); 
+        tournamentComponents.renderTournamentList('tournaments-section');
+
+        /* ---- Wallet component ---- */
+        const wallet = new WalletComponents();
+        wallet.setCurrentUser(id);
+        wallet.renderWalletDashboard('wallet-section');
+      } catch (err) {
+        console.error(err);
+        toast('Unable to load session', 'danger');
+      }
+    })();   // <- IIFE ends here; there is no stray "return" afterwards
+  </script>
+</body>
+</html>
